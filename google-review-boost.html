@@ -487,7 +487,7 @@
     </div>
 
     <div class="notice-box">
-      💡 以下の文章をそのまま使うか、ご自身で編集してからGoogleマップに投稿できます
+      💡 以下の文章をそのまま使うか、<strong>直接編集</strong>してからGoogleマップに投稿できます
     </div>
 
     <div class="result-box" id="resultBox">
@@ -820,7 +820,7 @@ function generateReview(isRegen = false) {
     lastTemplateIdx = idx;
     generatedText = templates[idx];
     box.className = "result-box";
-    box.innerHTML = `<button class="copy-btn" onclick="copyText()">📋 コピー</button>${generatedText}`;
+    box.innerHTML = `<button class="copy-btn" onclick="copyText()">📋 コピー</button><textarea id="editableText" style="width:100%;border:none;background:transparent;font-family:inherit;font-size:14px;line-height:1.8;color:var(--text);resize:vertical;min-height:120px;outline:none;padding-right:60px;" oninput="generatedText=this.value">${generatedText}</textarea>`;
     document.getElementById("regenBtn").style.display = "flex";
     document.getElementById("btnGoogle").style.display = "flex";
   }, 900);
@@ -828,6 +828,8 @@ function generateReview(isRegen = false) {
 
 // ===== COPY =====
 function copyText() {
+  const ta = document.getElementById("editableText");
+  if (ta) generatedText = ta.value;
   navigator.clipboard.writeText(generatedText).then(() => {
     const btn = document.querySelector(".copy-btn");
     btn.textContent = "✅ コピー済";
