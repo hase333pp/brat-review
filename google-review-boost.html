@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Google口コミ爆増くん</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+  :root {
+    --primary: #1a73e8;
+    --primary-dark: #0d47a1;
+    --accent: #fbbc04;
+    --success: #34a853;
+    --danger: #ea4335;
+    --bg: #f8f9fa;
+    --white: #ffffff;
+    --text: #202124;
+    --text-sub: #5f6368;
+    --card-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: #000000;
+    color: #55b53a;
+    padding: 24px 20px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .header-badge {
+    display: inline-block;
+    background: #55b53a;
+    color: #000;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .header p {
+    font-size: 13px;
+    opacity: 1;
+    color: #55b53a;
+    position: relative;
+    z-index: 1;
+  }
+  .stars-header {
+    color: var(--accent);
+    font-size: 20px;
+    margin-top: 8px;
+    letter-spacing: 2px;
+  }
+
+  /* ===== STEPS ===== */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 20px 20px 0;
+  }
+  .step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #999;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .step-dot.active { background: #000000; color: #55b53a; }
+  .step-dot.done { background: var(--success); color: white; }
+  .step-line {
+    height: 3px;
+    width: 40px;
+    background: #e0e0e0;
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .step-line.done { background: var(--success); }
+
+  /* ===== CARD ===== */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    padding: 24px 20px;
+    margin: 16px 16px 0;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: #e8f0fe;
+  }
+
+  /* ===== SECTION (screen) ===== */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== RATING SELECTOR ===== */
+  .rating-section { margin-bottom: 20px; }
+  .rating-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .stars-selector {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .star-btn {
+    font-size: 36px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    filter: grayscale(1);
+    opacity: 0.3;
+    background: none; border: none;
+    line-height: 1;
+  }
+  .star-btn.active {
+    filter: grayscale(0);
+    opacity: 1;
+    transform: scale(1.15);
+    color: #55b53a;
+  }
+  .rating-text {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-sub);
+    min-height: 18px;
+  }
+
+  /* ===== CHIPS ===== */
+  .chips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .chip {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .chip .chip-emoji { display: block; font-size: 20px; margin-bottom: 3px; }
+  .chip:active { transform: scale(0.97); }
+  .chip.selected {
+    border-color: var(--primary);
+    background: #e8f0fe;
+    color: var(--primary);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: #000000;
+    color: #55b53a;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  }
+  .btn-google {
+    background: white;
+    color: var(--text);
+    border: 2px solid #e0e0e0;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 12px;
+  }
+  .btn-google .g-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853, #fbbc04, #ea4335);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 900; font-size: 12px;
+  }
+  .btn-secondary {
+    background: #f1f3f4;
+    color: var(--text-sub);
+    margin-top: 8px;
+  }
+
+  /* ===== RESULT TEXT ===== */
+  .result-box {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 16px;
+    min-height: 120px;
+    position: relative;
+    white-space: pre-wrap;
+  }
+  .result-box.loading {
+    color: var(--text-sub);
+    font-style: italic;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .loading-dots::after {
+    content: '...';
+    animation: dots 1.2s infinite;
+  }
+  @keyframes dots {
+    0%,20% { content: '.'; }
+    40%,60% { content: '..'; }
+    80%,100% { content: '...'; }
+  }
+  .copy-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--primary);
+  }
+
+  /* ===== COMPLETION ===== */
+  .completion-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--success), #2e7d32);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 16px;
+    box-shadow: 0 6px 20px rgba(52,168,83,0.4);
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .completion-title {
+    font-size: 20px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .completion-sub {
+    font-size: 13px;
+    color: var(--text-sub);
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  /* ===== FOOTER NOTE ===== */
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-sub);
+    padding: 16px 20px 32px;
+    line-height: 1.6;
+  }
+
+  /* ===== LOW RATING SCREEN ===== */
+  .low-rating-card {
+    text-align: center;
+  }
+  .low-rating-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .low-rating-title {
+    font-size: 17px;
+    font-weight: 900;
+    margin-bottom: 10px;
+    color: var(--danger);
+  }
+  .low-rating-text {
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .mail-form input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .mail-form input:focus { border-color: var(--primary); }
+  .mail-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    margin-bottom: 12px;
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+  }
+  .mail-form textarea:focus { border-color: var(--primary); }
+
+  /* ===== REGEN ===== */
+  .regen-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    background: white;
+    border: 2px dashed var(--primary);
+    border-radius: 10px;
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .regen-btn:active { background: #e8f0fe; }
+
+  .notice-box {
+    background: #fff8e1;
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #5f4400;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-badge">📢 Google口コミ投稿サポート</div>
+  <h1>ご利用ありがとうございました！<br>感想を教えてください</h1>
+  <p>AIが投稿文を自動作成します ✨</p>
+  <div class="stars-header">★★★★★</div>
+</div>
+
+<!-- STEP INDICATOR -->
+<div class="step-indicator" id="stepIndicator">
+  <div class="step-dot active" id="step1">1</div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-dot" id="step2">2</div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-dot" id="step3">3</div>
+</div>
+
+<!-- ===== SCREEN 1: RATING ===== -->
+<div class="screen active" id="screen1">
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">⭐</span>
+      今回のご満足度はいかがでしたか？
+    </div>
+
+    <div class="rating-section">
+      <div class="stars-selector" id="starsSelector">
+        <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+        <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+        <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+        <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+        <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+      </div>
+      <div class="rating-text" id="ratingText">タップして評価してください</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="goToStep2()" id="btnStep1" disabled style="opacity:0.4">
+      次へ →
+    </button>
+  </div>
+  <div class="footer-note">
+    ※ご回答内容はGoogle口コミ投稿のサポートにのみ使用します
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: DETAILS ===== -->
+<div class="screen" id="screen2">
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">📝</span>
+      どんな点が良かったですか？
+    </div>
+    <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px;">当てはまるものを選んでください（複数OK）</p>
+
+    <div class="chips-grid" id="chipsGrid">
+      <!-- chips inserted by JS based on shop type -->
+    </div>
+
+    <button class="btn btn-primary" onclick="generateReview()" id="btnGenerate">
+      🤖 AIで口コミ文を作成する
+    </button>
+    <button class="btn btn-secondary" onclick="goBack(2)">← 戻る</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: RESULT ===== -->
+<div class="screen" id="screen3">
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">✅</span>
+      AIが作成した口コミ文
+    </div>
+
+    <div class="notice-box">
+      💡 以下の文章をそのまま使うか、ご自身で編集してからGoogleマップに投稿できます
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <span class="loading-dots">AIが文章を作成中</span>
+    </div>
+
+    <button class="regen-btn" onclick="generateReview(true)" id="regenBtn" style="display:none">
+      🔄 別のパターンで作り直す
+    </button>
+
+    <button class="btn btn-google" onclick="openGoogleMaps()" id="btnGoogle" style="display:none">
+      <span class="g-icon">G</span>
+      Googleマップに投稿する
+    </button>
+    <button class="btn btn-secondary" onclick="goBack(3)" style="margin-top:8px">← 戻る</button>
+  </div>
+
+  <!-- COMPLETION after copy -->
+  <div class="card" id="completionCard" style="display:none; margin-top:16px;">
+    <div class="completion-icon">🎉</div>
+    <div class="completion-title">投稿ありがとうございます！</div>
+    <div class="completion-sub">
+      口コミのご投稿、誠にありがとうございます。<br>
+      いただいた評価がスタッフの励みになります。<br>
+      またのご来店を心よりお待ちしております！
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN LOW RATING ===== -->
+<div class="screen" id="screenLow">
+  <div class="card low-rating-card">
+    <div class="low-rating-icon">🙇</div>
+    <div class="low-rating-title">ご不満をおかけして申し訳ございません</div>
+    <div class="low-rating-text">
+      今後のサービス改善のため、<br>
+      詳しいご意見を店長まで直接お聞かせください。<br>
+      責任をもって対応いたします。
+    </div>
+    <div class="mail-form">
+      <textarea id="feedbackText" placeholder="ご意見・ご要望をご記入ください…"></textarea>
+      <button class="btn btn-primary" onclick="sendFeedback()">
+        📩 店長に直接伝える
+      </button>
+    </div>
+  </div>
+  <div class="footer-note">
+    ご意見は店長のみが確認します。<br>改善に向けて誠実に対応いたします。
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+// ここを書き換えてください
+const CONFIG = {
+  shopName: "brat", // お店の名前
+  shopType: "car_used", // car_used / car_repair / bodywork / coating / car_general
+  googleMapsUrl: "https://share.google/6Axc4Lrr2AUo7LVXf", // GoogleマップのURL
+  ownerEmail: "brat.info01@gmail.com", // オーナーのメールアドレス（低評価ブロック用）
+  lowRatingThreshold: 3, // これ以下の評価で低評価ブロック発動
+  enableLowRatingBlock: true, // 低評価ブロック機能のON/OFF
+};
+
+// ===== CHIPS BY SHOP TYPE =====
+const CHIP_OPTIONS = {
+  car_used: [
+    { emoji: "🚗", label: "在庫が豊富" },
+    { emoji: "😊", label: "スタッフが親切" },
+    { emoji: "📋", label: "説明が丁寧" },
+    { emoji: "💰", label: "価格が適正" },
+    { emoji: "🔍", label: "車の状態が良い" },
+    { emoji: "🛡️", label: "保証が充実" },
+    { emoji: "⚡", label: "手続きが早い" },
+    { emoji: "🤝", label: "アフターフォロー" },
+  ],
+  car_repair: [
+    { emoji: "🔧", label: "技術が高い" },
+    { emoji: "😊", label: "スタッフが親切" },
+    { emoji: "📋", label: "説明が丁寧" },
+    { emoji: "⚡", label: "作業が早い" },
+    { emoji: "💰", label: "料金が明確" },
+    { emoji: "✅", label: "仕上がりが良い" },
+    { emoji: "🏠", label: "待合室が快適" },
+    { emoji: "🤝", label: "信頼できる" },
+  ],
+  bodywork: [
+    { emoji: "✨", label: "仕上がりが綺麗" },
+    { emoji: "😊", label: "スタッフが親切" },
+    { emoji: "📋", label: "説明が丁寧" },
+    { emoji: "💰", label: "料金が適正" },
+    { emoji: "⚡", label: "納期が早い" },
+    { emoji: "🔍", label: "どこ直したか分からない" },
+    { emoji: "🎨", label: "色合わせが完璧" },
+    { emoji: "🤝", label: "信頼できる" },
+  ],
+  coating: [
+    { emoji: "✨", label: "コーティングが綺麗" },
+    { emoji: "😊", label: "スタッフが親切" },
+    { emoji: "📋", label: "説明が丁寧" },
+    { emoji: "💰", label: "料金が適正" },
+    { emoji: "⚡", label: "作業が早い" },
+    { emoji: "🌟", label: "新車みたいな輝き" },
+    { emoji: "💧", label: "撥水性が抜群" },
+    { emoji: "🛡️", label: "保護効果が高い" },
+  ],
+  car_general: [
+    { emoji: "😊", label: "スタッフが親切" },
+    { emoji: "📋", label: "説明が丁寧" },
+    { emoji: "✅", label: "仕上がりが良い" },
+    { emoji: "💰", label: "料金が適正" },
+    { emoji: "⚡", label: "対応が早い" },
+    { emoji: "🔍", label: "品質が高い" },
+    { emoji: "🏠", label: "待合室が快適" },
+    { emoji: "🤝", label: "信頼できる" },
+  ],
+};
+
+// ===== RATING LABELS =====
+const RATING_LABELS = {
+  1: "😞 大変残念でした",
+  2: "😕 あまり満足できませんでした",
+  3: "😐 普通でした",
+  4: "😊 満足しました！",
+  5: "🤩 大変満足しました！！",
+};
+
+let currentRating = 0;
+let selectedChips = [];
+let generatedText = "";
+
+// ===== INIT CHIPS =====
+function initChips() {
+  const chips = CHIP_OPTIONS[CONFIG.shopType] || CHIP_OPTIONS.car_general;
+  const grid = document.getElementById("chipsGrid");
+  grid.innerHTML = chips.map((c, i) =>
+    `<div class="chip" onclick="toggleChip(this, '${c.label}')" data-label="${c.label}">
+      <span class="chip-emoji">${c.emoji}</span>${c.label}
+    </div>`
+  ).join("");
+}
+
+function toggleChip(el, label) {
+  el.classList.toggle("selected");
+  if (el.classList.contains("selected")) {
+    selectedChips.push(label);
+  } else {
+    selectedChips = selectedChips.filter(s => s !== label);
+  }
+}
+
+// ===== RATING =====
+function setRating(val) {
+  currentRating = val;
+  document.querySelectorAll(".star-btn").forEach((btn, i) => {
+    btn.classList.toggle("active", i < val);
+  });
+  document.getElementById("ratingText").textContent = RATING_LABELS[val] || "";
+  const btn = document.getElementById("btnStep1");
+  btn.disabled = false;
+  btn.style.opacity = "1";
+}
+
+// ===== NAVIGATION =====
+function updateStepUI(step) {
+  [1,2,3].forEach(s => {
+    const dot = document.getElementById("step" + s);
+    if (s < step) { dot.className = "step-dot done"; dot.textContent = "✓"; }
+    else if (s === step) { dot.className = "step-dot active"; dot.textContent = s; }
+    else { dot.className = "step-dot"; dot.textContent = s; }
+  });
+  [1,2].forEach(l => {
+    document.getElementById("line" + l).className = "step-line" + (l < step ? " done" : "");
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function goToStep2() {
+  if (!currentRating) return;
+  if (CONFIG.enableLowRatingBlock && currentRating <= CONFIG.lowRatingThreshold) {
+    document.getElementById("stepIndicator").style.display = "none";
+    showScreen("screenLow");
+    return;
+  }
+  selectedChips = [];
+  initChips();
+  updateStepUI(2);
+  showScreen("screen2");
+}
+
+function goBack(fromStep) {
+  if (fromStep === 2) { updateStepUI(1); showScreen("screen1"); }
+  if (fromStep === 3) { updateStepUI(2); showScreen("screen2"); }
+}
+
+// ===== TEMPLATE DATABASE =====
+const TEMPLATES = {
+  "none_5": [
+    "先日こちらでお世話になりました。スタッフの方がとても親切で、安心して購入することができました。車の状態も説明通りで大変満足しています。またお願いしたいと思います。",
+    "今回初めて利用しましたが、対応がとても丁寧で好印象でした。細かいところまで説明していただき、不安なく手続きを進めることができました。ありがとうございました。",
+    "とても良いお店でした。スタッフの方が誠実で信頼できる対応をしてくださいました。購入後のフォローもしっかりしていて安心です。また利用したいと思います。",
+  ],
+  "none_4": [
+    "対応が丁寧で、全体的に満足のいく買い物ができました。スタッフの方も感じが良く、また機会があればお願いしたいと思います。",
+    "スタッフの方の説明がわかりやすく、スムーズに手続きができました。全体的に満足しています。またよろしくお願いします。",
+  ],
+  "在庫が豊富_5": [
+    "在庫の種類が豊富で、希望に合った車を見つけることができました。スタッフの方も親切に対応してくださり、納得のいく買い物ができました。大変満足しています。",
+    "たくさんの車の中から自分にぴったりの1台を選ぶことができました。選択肢が多いのはありがたいですね。スタッフの方も丁寧に案内してくれて良かったです。",
+  ],
+  "スタッフが親切_5": [
+    "スタッフの方がとても親切で、初めての購入でも安心して進めることができました。質問にも丁寧に答えていただき、不安が解消されました。本当にありがとうございました。",
+    "担当の方がとても親身になって相談に乗ってくれました。無理な売り込みもなく、こちらの希望をしっかり聞いてくれたので、納得のいく選択ができました。",
+    "スタッフさんの対応がとても良く、気持ちよく購入できました。細かいことにも気を遣っていただき、さすがプロだと感じました。また利用したいと思います。",
+  ],
+  "スタッフが親切_4": [
+    "スタッフの方が親切に対応してくれました。全体的に満足しています。また機会があればお願いしたいと思います。",
+  ],
+  "説明が丁寧_5": [
+    "車の状態や保証内容について、一つひとつ丁寧に説明していただきました。初めての中古車購入で不安でしたが、おかげで安心して決めることができました。",
+    "購入前の説明がとても詳しく、車の良い点も気になる点も正直に話してくださいました。信頼できるお店だと感じました。大変満足しています。",
+  ],
+  "価格が適正_5": [
+    "価格も適正で、他店と比べても納得のいく金額で購入できました。スタッフの方も誠実で、満足度の高い買い物ができました。またお願いしたいと思います。",
+    "コストパフォーマンスが高く、満足のいく買い物ができました。値段と品質のバランスが良く、また利用したいと思います。",
+  ],
+  "車の状態が良い_5": [
+    "車の状態が写真や説明通りで、とても良いコンディションでした。納車された車を見て感動しました。丁寧に管理されていることが伝わりました。",
+    "実際に見た車の状態がとても良く、大満足です。走行感も快適で、購入して本当に良かったと思っています。またこちらで探したいと思います。",
+  ],
+  "保証が充実_5": [
+    "購入後の保証がしっかりしていて安心感があります。万が一の時も対応していただけるとのことで、長く乗り続けられそうです。ありがとうございました。",
+    "アフター保証が充実していて、購入後も安心です。担当の方も丁寧に説明してくれました。信頼できるお店だと思います。",
+  ],
+  "手続きが早い_5": [
+    "手続きがスムーズで、思ったよりも早く納車していただけました。忙しい中でも助かりました。スタッフの方の対応も良く、大変満足しています。",
+  ],
+  "アフターフォロー_5": [
+    "納車後もアフターフォローがしっかりしていて安心です。気になることがあれば気軽に相談できる雰囲気があり、長いお付き合いができそうです。",
+    "購入後の対応も丁寧で、困ったことがあればすぐに相談に乗っていただけます。これからも長くお世話になりたいと思います。",
+  ],
+  "信頼できる_5": [
+    "誠実な対応で、とても信頼できるお店だと感じました。購入後も安心してお付き合いできそうです。またお世話になりたいと思います。",
+  ],
+  "スタッフが親切_説明が丁寧_5": [
+    "スタッフの方がとても親切で、車の状態から保証内容まで丁寧に説明してくださいました。初めての購入でも安心して進めることができ、大変満足しています。",
+    "担当の方が親身になって対応してくださり、細かい点まで丁寧に説明していただきました。安心して購入できました。またお願いしたいと思います。",
+  ],
+  "スタッフが親切_価格が適正_5": [
+    "スタッフの方の対応が良く、価格も納得のいく金額でした。満足度の高い買い物ができました。またこちらで探したいと思います。",
+  ],
+  "説明が丁寧_保証が充実_5": [
+    "購入前の説明が丁寧で、保証内容についても詳しく教えていただきました。安心して長く乗れそうです。信頼できるお店だと感じました。",
+  ],
+  "在庫が豊富_スタッフが親切_5": [
+    "在庫が豊富でたくさんの車の中から選べました。スタッフの方も親切で、希望に合った1台を見つけることができました。大満足です。",
+  ],
+  "スタッフが親切_説明が丁寧_保証が充実_5": [
+    "スタッフの方がとても親切で、車の説明から保証内容まで一つひとつ丁寧に説明してくださいました。初めての中古車購入でしたが、不安なく進めることができました。アフターフォローも充実していて安心です。またお世話になりたいと思います。",
+  ],
+  "在庫が豊富_スタッフが親切_説明が丁寧_5": [
+    "在庫が豊富でたくさんの車の中から選ぶことができました。スタッフの方も親切で、一台一台丁寧に説明してくださいました。納得のいく買い物ができて大満足です。",
+  ],
+  "スタッフが親切_車の状態が良い_5": [
+    "スタッフの方がとても親切で、車の状態も非常に良く大満足です。納車された車は想像以上にきれいで、エンジンの調子も快調です。また利用したいと思います。",
+  ],
+  "説明が丁寧_価格が適正_5": [
+    "説明が丁寧で、価格も納得のいく金額でした。正直に車の状態を教えてくれる誠実なお店だと感じました。またお世話になりたいと思います。",
+  ],
+};
+
+let lastTemplateIdx = -1;
+
+function getCombinations(arr, size) {
+  if (size === 1) return arr.map(e => [e]);
+  const result = [];
+  for (let i = 0; i <= arr.length - size; i++) {
+    const rest = getCombinations(arr.slice(i + 1), size - 1);
+    rest.forEach(combo => result.push([arr[i], ...combo]));
+  }
+  return result;
+}
+
+function getTemplate(chips, rating) {
+  const r = rating >= 4 ? "5" : "4";
+  if (chips.length >= 2) {
+    const sorted = [...chips].sort();
+    for (let len = sorted.length; len >= 2; len--) {
+      const combos = getCombinations(sorted, len);
+      for (const combo of combos) {
+        const key = combo.join("_") + "_" + r;
+        if (TEMPLATES[key]) return TEMPLATES[key];
+      }
+    }
+  }
+  if (chips.length >= 1) {
+    for (const chip of chips) {
+      const key = chip + "_" + r;
+      if (TEMPLATES[key]) return TEMPLATES[key];
+    }
+  }
+  return TEMPLATES["none_" + r] || TEMPLATES["none_5"];
+}
+
+// ===== GENERATE REVIEW =====
+function generateReview(isRegen = false) {
+  updateStepUI(3);
+  showScreen("screen3");
+
+  const box = document.getElementById("resultBox");
+  box.className = "result-box loading";
+  box.innerHTML = '<span class="loading-dots">AIが文章を作成中</span>';
+  document.getElementById("regenBtn").style.display = "none";
+  document.getElementById("btnGoogle").style.display = "none";
+  document.getElementById("completionCard").style.display = "none";
+
+  setTimeout(() => {
+    const templates = getTemplate(selectedChips, currentRating);
+    let idx = Math.floor(Math.random() * templates.length);
+    if (isRegen && templates.length > 1) {
+      let newIdx = idx;
+      let tries = 0;
+      while (newIdx === lastTemplateIdx && tries < 10) { newIdx = Math.floor(Math.random() * templates.length); tries++; }
+      idx = newIdx;
+    }
+    lastTemplateIdx = idx;
+    generatedText = templates[idx];
+    box.className = "result-box";
+    box.innerHTML = `<button class="copy-btn" onclick="copyText()">📋 コピー</button>${generatedText}`;
+    document.getElementById("regenBtn").style.display = "flex";
+    document.getElementById("btnGoogle").style.display = "flex";
+  }, 900);
+}
+
+// ===== COPY =====
+function copyText() {
+  navigator.clipboard.writeText(generatedText).then(() => {
+    const btn = document.querySelector(".copy-btn");
+    btn.textContent = "✅ コピー済";
+    btn.style.color = "var(--success)";
+  });
+}
+
+// ===== GOOGLE MAPS =====
+function openGoogleMaps() {
+  window.open(CONFIG.googleMapsUrl, "_blank");
+  setTimeout(() => {
+    document.getElementById("completionCard").style.display = "block";
+    window.scrollTo(0, document.body.scrollHeight);
+  }, 800);
+}
+
+// ===== LOW RATING FEEDBACK =====
+function sendFeedback() {
+  const text = document.getElementById("feedbackText").value.trim();
+  if (!text) { alert("ご意見をご記入ください"); return; }
+  const subject = encodeURIComponent(`【ご意見】Googleレビューフォームより`);
+  const body = encodeURIComponent(`満足度：${currentRating}点\n\nご意見：\n${text}`);
+  window.location.href = `mailto:${CONFIG.ownerEmail}?subject=${subject}&body=${body}`;
+}
+
+// ===== INIT =====
+initChips();
+</script>
+</body>
+</html>
